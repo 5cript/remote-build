@@ -33,7 +33,7 @@ Communicator::Communicator(std::string const& remote, std::string const& remoteP
 {
 }
 //---------------------------------------------------------------------------------------------------------------------
-bool Communicator::authenticate()
+bool Communicator::authenticate(std::string const& user, std::string const& password)
 {
     CURL* curl = curl_easy_init();
 
@@ -43,8 +43,8 @@ bool Communicator::authenticate()
         std::string response_string;
         std::string header_string;
         curl_easy_setopt(curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_easy_setopt(curl, CURLOPT_USERNAME, "admin");
-        curl_easy_setopt(curl, CURLOPT_PASSWORD, "ominous_password64");
+        curl_easy_setopt(curl, CURLOPT_USERNAME, user.c_str());
+        curl_easy_setopt(curl, CURLOPT_PASSWORD, password.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &header_string);

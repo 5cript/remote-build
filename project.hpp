@@ -9,7 +9,7 @@
 class Project
 {
 public:
-    Project(std::string rootDir, std::string id, std::string remoteServer);
+    Project(std::string rootDir, std::string id, std::string remoteServer, std::string const& user, std::string const& password);
     ~Project();
 
     Project(Project const&) = delete;

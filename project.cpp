@@ -8,13 +8,13 @@
 
 using namespace std::string_literals;
 //#####################################################################################################################
-Project::Project(std::string rootDir, std::string id, std::string remoteServer)
+Project::Project(std::string rootDir, std::string id, std::string remoteServer, std::string const& user, std::string const& password)
     : rootDir_{rootDir}
     , id_{std::move(id)}
     , com_{remoteServer, id_}
 {
     com_.initialize();
-    if (!com_.authenticate())
+    if (!com_.authenticate(user, password))
         throw std::runtime_error("authentication failed");
 }
 //---------------------------------------------------------------------------------------------------------------------

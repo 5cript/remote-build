@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     }
     auto config = loadConfig(reader);
 
-    Project project(config.local, config.id, config.serverAddress);
+    Project project(config.local, config.id, config.serverAddress, config.user, config.password);
 
     //######################################################################################################
     // START REQUESTS
