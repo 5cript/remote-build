@@ -13,6 +13,13 @@ namespace po = boost::program_options;
 
 int main(int argc, char** argv)
 {
+    try
+    {
+
+    //######################################################################################################
+    // PROGRAM OPTIONS
+    //######################################################################################################
+
     std::string configPath;
     int buildTimeout = 60;
 
@@ -46,6 +53,10 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    //######################################################################################################
+    // PROJECT
+    //######################################################################################################
+
     std::ifstream reader(configPath, std::ios_base::binary);
     if (!reader.good())
     {
@@ -55,6 +66,10 @@ int main(int argc, char** argv)
     auto config = loadConfig(reader);
 
     Project project(config.local, config.id, config.serverAddress);
+
+    //######################################################################################################
+    // START REQUESTS
+    //######################################################################################################
 
     if (vm.count("clean"))
         project.clean();
@@ -95,19 +110,27 @@ int main(int argc, char** argv)
     {
         project.build();
 
-        std::cout << "waiting for build to finish...";
-        for (int i = 0; i < buildTimeout; i += 3)
+        std::cout << "waiting for build to finish...\n";
+        for (int i = 0; buildTimeout == 0 || i < buildTimeout; i += 3)
         {
             if (!project.isBuilding())
             {
                 std::ofstream writer{config.log, std::ios_base::binary};
-                project.saveBuildLog(std::cout);
-                return 0;
+                project.saveBuildLog(std::cout, writer);
+                return project.getExitStatus();
             }
             std::this_thread::sleep_for(std::chrono::seconds{3});
         }
         std::cout << "waiting for build to finish timed out, here is the build log so far\n";
         std::ofstream writer{config.log, std::ios_base::binary};
-        //project.saveBuildLog(std::cout, writer);
+        project.saveBuildLog(std::cout, writer);
+        return 0;
+    }
+
+
+    }
+    catch(std::exception const& exc)
+    {
+        std::cout << "something failed...\n" << exc.what() << "\n";
     }
 }

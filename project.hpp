@@ -19,6 +19,7 @@ public:
     void upload(std::vector <std::string> const& blackFilterList, bool updatedOnly, std::string const& mask = "*.?pp");
     void build();
     void clean();
+    int getExitStatus();
 
 private:
     void putStringToStream(std::string const& str)

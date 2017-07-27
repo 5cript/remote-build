@@ -14,6 +14,8 @@ Project::Project(std::string rootDir, std::string id, std::string remoteServer)
     , com_{remoteServer, id_}
 {
     com_.initialize();
+    if (!com_.authenticate())
+        throw std::runtime_error("authentication failed");
 }
 //---------------------------------------------------------------------------------------------------------------------
 Project::~Project()
@@ -76,6 +78,12 @@ bool Project::isBuilding()
         return false;
 
     throw std::runtime_error(("unexpected response from server"s + res).c_str());
+}
+//---------------------------------------------------------------------------------------------------------------------
+int Project::getExitStatus()
+{
+    auto res = com_.makeRequest("exit_status");
+    return std::stol(res);
 }
 //---------------------------------------------------------------------------------------------------------------------
 void Project::build()

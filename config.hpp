@@ -27,5 +27,5 @@ void saveConfig(std::ostream& stream, Config const& cfg);
 BOOST_FUSION_ADAPT_STRUCT
 (
     Config,
-    serverAddress, local, id, directoryFilter, fileFilter, globExpression
+    serverAddress, local, id, directoryFilter, fileFilter, globExpression, log
 )

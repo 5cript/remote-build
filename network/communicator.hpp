@@ -21,6 +21,7 @@ class Communicator
 public:
     Communicator(std::string const& remote, std::string const& remotePathSuf);
 
+    bool authenticate();
     void initialize();
     void cleanup();
     void uploadFile(std::string const& local, std::string const& remote);
@@ -28,5 +29,7 @@ public:
     std::string makeRequest(std::string const& command);
 
 private:
+    std::string remoteAddr_;
     std::string remoteServer_;
+    std::string authToken_;
 };
