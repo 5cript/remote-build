@@ -13,3 +13,18 @@ Allowed options:
   -o [ --updated-only ]                clean stuff on host
   -t [ --timeout ] arg (=60)           build wait timeout (seconds)
 ```
+
+## Example Confgi
+```JSON
+{
+  "config": {
+	"serverAddress": "192.168.168.96",
+	"local": "D:/projects/list-disk",
+	"id": "list-disk",
+	"log": "./output.txt",	
+	"user": "admin",
+	"password": "admin",
+	"globExpression": "*.?pp"
+  }
+}
+```
