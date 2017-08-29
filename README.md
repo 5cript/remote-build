@@ -18,7 +18,7 @@ Allowed options:
 ```JSON
 {
   "config": {
-	"serverAddress": "192.168.168.96",
+	"serverAddress": "192.168.168.96:26000",
 	"local": "D:/projects/list-disk",
 	"id": "list-disk",
 	"log": "./output.txt",	
