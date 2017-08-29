@@ -2,6 +2,7 @@
 DO NOT USE, ITS NOT SAFE.
 
 ## Program Options
+```
 Allowed options:
   --help                               produce help message
   -i [ --config ] arg (=./config.json) config to use
@@ -11,3 +12,4 @@ Allowed options:
   -c [ --clean ]                       clean stuff on host
   -o [ --updated-only ]                clean stuff on host
   -t [ --timeout ] arg (=60)           build wait timeout (seconds)
+```
