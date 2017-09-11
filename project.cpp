@@ -8,9 +8,15 @@
 
 using namespace std::string_literals;
 //#####################################################################################################################
-Project::Project(std::string rootDir, std::string id, std::string remoteServer, std::string const& user, std::string const& password)
+Project::Project(std::string rootDir,
+                 std::string id,
+                 std::string remoteServer,
+                 std::string const& user,
+                 std::string const& password,
+                 bool ignoreUploadError)
     : rootDir_{rootDir}
     , id_{std::move(id)}
+    , ignoreUploadError_{ignoreUploadError}
     , com_{remoteServer, id_}
 {
     com_.initialize();
@@ -53,19 +59,32 @@ void Project::upload(std::vector <std::string> const& blackFilterList, bool upda
     auto files = glob.globRecursive(mask);
     for (auto const& i : files)
     {
-        auto path = rootDir_ + "/" + i.string();
-#ifdef _WIN32
-        auto attributes = GetFileAttributes(path.c_str());
-        if (updatedOnly && (attributes & FILE_ATTRIBUTE_ARCHIVE))
+        try
         {
-            com_.uploadFile(path, i.string());
-            SetFileAttributes(path.c_str(), attributes & ~FILE_ATTRIBUTE_ARCHIVE);
-        }
-        else if (!updatedOnly)
-            com_.uploadFile(path, i.string());
+            auto path = rootDir_ + "/" + i.string();
+#ifdef _WIN32
+            auto attributes = GetFileAttributes(path.c_str());
+            if (updatedOnly && (attributes & FILE_ATTRIBUTE_ARCHIVE))
+            {
+                com_.uploadFile(path, i.string());
+                SetFileAttributes(path.c_str(), attributes & ~FILE_ATTRIBUTE_ARCHIVE);
+            }
+            else if (!updatedOnly)
+                com_.uploadFile(path, i.string());
 #else
-        com_.uploadFile(path, i.string());
+            com_.uploadFile(path, i.string());
 #endif // _WIN32
+        }
+        catch (std::exception const& exc)
+        {
+            if (ignoreUploadError_)
+            {
+                std::cerr << exc.what() << "\n";
+                std::cerr << "ignoring error, continue\n";
+            }
+            else
+                throw exc;
+        }
     }
 }
 //---------------------------------------------------------------------------------------------------------------------

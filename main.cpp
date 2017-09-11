@@ -23,16 +23,18 @@ int main(int argc, char** argv)
 
     std::string configPath;
     int buildTimeout = 60;
+    bool ignoreUploadError = false;
 
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "produce help message")
-        ("config,i", po::value<std::string>(&configPath)->default_value("./config.json"), "config to use")
+        ("config,f", po::value<std::string>(&configPath)->default_value("./config.json"), "config to use")
         ("make-directories,m", "create directory on remote host")
         ("upload,u", "upload files to host")
         ("build,b", "build stuff on host")
         ("clean,c", "clean stuff on host")
         ("updated-only,o", "clean stuff on host")
+        ("ignore-upload-fail,i", "continue, even if a file could not be opened for upload")
         ("timeout,t", po::value<int>(&buildTimeout)->default_value(60), "build wait timeout (seconds)")
     ;
 
@@ -53,6 +55,7 @@ int main(int argc, char** argv)
         std::cout << desc << "\n";
         return 1;
     }
+    ignoreUploadError = vm.count("ignore-upload-fail") > 0;
 
     //######################################################################################################
     // PROJECT
@@ -62,11 +65,13 @@ int main(int argc, char** argv)
     if (!reader.good())
     {
         std::cerr << "provide config.json\n";
+		std::cerr << "could not open: " << configPath << "\n";
+		std::cerr << "(current path: " << boost::filesystem::current_path() << ")\n";
         return 1;
     }
     auto config = loadConfig(reader);
 
-    Project project(config.local, config.id, config.serverAddress, config.user, config.password);
+    Project project(config.local, config.id, config.serverAddress, config.user, config.password, ignoreUploadError);
 
     //######################################################################################################
     // START REQUESTS
@@ -85,7 +90,7 @@ int main(int argc, char** argv)
             vm.count("clean") == 0 && vm.count("updated-only")
         );
     }
-    if (vm.count("upload"))
+    if (true || vm.count("upload"))
     {
         std::vector <std::string> fileFilter;
         if (config.fileFilter)
@@ -133,5 +138,6 @@ int main(int argc, char** argv)
     catch(std::exception const& exc)
     {
         std::cout << "something failed...\n" << exc.what() << "\n";
+        return 1;
     }
 }

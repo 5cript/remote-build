@@ -9,7 +9,12 @@
 class Project
 {
 public:
-    Project(std::string rootDir, std::string id, std::string remoteServer, std::string const& user, std::string const& password);
+    Project(std::string rootDir,
+            std::string id,
+            std::string remoteServer,
+            std::string const& user,
+            std::string const& password,
+            bool ignoreUploadError);
     ~Project();
 
     Project(Project const&) = delete;
@@ -46,6 +51,7 @@ public:
 private:
     std::string rootDir_;
     std::string id_;
+    bool ignoreUploadError_;
 
     Communicator com_;
 };
