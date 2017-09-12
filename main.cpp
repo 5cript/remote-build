@@ -93,21 +93,19 @@ int main(int argc, char** argv)
     if (true || vm.count("upload"))
     {
         std::vector <std::string> fileFilter;
+        std::vector <std::string> dirFilter;
         if (config.fileFilter)
             fileFilter = config.fileFilter.get();
         if (config.directoryFilter)
-        {
-            auto directoryFilter = config.directoryFilter.get();
-            for (auto const& df : directoryFilter)
-                fileFilter.push_back(df);
-        }
+            dirFilter = config.directoryFilter.get();
 
-        std::string globExpr = "*.?pp";
-        if (config.globExpression)
-            globExpr = config.globExpression.get();
+        std::vector <std::string> globExpr {"*.?pp"};
+        if (config.globExpressions)
+            globExpr = config.globExpressions.get();
 
         project.upload(
             fileFilter,
+            dirFilter,
             vm.count("clean") == 0 && vm.count("updated-only"),
             globExpr
         );
@@ -117,6 +115,7 @@ int main(int argc, char** argv)
         project.build();
 
         std::cout << "waiting for build to finish...\n";
+        std::this_thread::sleep_for(std::chrono::seconds{1});
         for (int i = 0; buildTimeout == 0 || i < buildTimeout; i += 3)
         {
             if (!project.isBuilding())

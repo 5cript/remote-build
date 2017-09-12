@@ -24,7 +24,19 @@ Allowed options:
 	"log": "./output.txt",	
 	"user": "admin",
 	"password": "admin",
-	"globExpression": "*.?pp"
+	"globExpressions": ["*.?pp"],
+	"fileFilter": [
+		"*.md",
+		"LICENSE",
+		"*.depend",
+		"*.cbp",
+		"*_build_log.html",
+		"remote_build.bat"
+	],
+	"directoryFilter": [
+		"build",
+		".git"
+	]
   }
 }
 ```

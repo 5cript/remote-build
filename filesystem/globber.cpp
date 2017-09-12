@@ -20,11 +20,24 @@ void Globber::setBlackList(std::vector <std::string> const& blackList)
     blackList_ = blackList;
 }
 //---------------------------------------------------------------------------------------------------------------------
+void Globber::setDirectoryBlackList(std::vector <std::string> const& blackList)
+{
+    dirBlackList_ = blackList;
+}
+//---------------------------------------------------------------------------------------------------------------------
 bool Globber::isBlacklisted(boost::filesystem::path const& p)
 {
     for (auto const& i : blackList_)
         if (checkMask(p, i))
             return true;
+    for (auto const& i : dirBlackList_)
+    {
+        auto root = p;
+        while (!root.parent_path().empty())
+            root = root.parent_path();
+        if (root.string() == i)
+            return true;
+    }
     return false;
 }
 //---------------------------------------------------------------------------------------------------------------------

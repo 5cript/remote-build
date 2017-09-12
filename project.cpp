@@ -52,38 +52,46 @@ void Project::createDirectoryStructure(std::vector <std::string> const& blackFil
     }
 }
 //---------------------------------------------------------------------------------------------------------------------
-void Project::upload(std::vector <std::string> const& blackFilterList, bool updatedOnly, std::string const& mask)
+void Project::upload(std::vector <std::string> const& fileFilter,
+                     std::vector <std::string> const& dirFilter,
+                     bool updatedOnly,
+                     std::vector <std::string> const& mask)
 {
     Globber glob(rootDir_);
-    glob.setBlackList(blackFilterList);
-    auto files = glob.globRecursive(mask);
-    for (auto const& i : files)
+    glob.setBlackList(fileFilter);
+    glob.setDirectoryBlackList(dirFilter);
+
+    for (auto const& globberExpression : mask)
     {
-        try
+        auto files = glob.globRecursive(globberExpression);
+        for (auto const& i : files)
         {
-            auto path = rootDir_ + "/" + i.string();
+            try
+            {
+                auto path = rootDir_ + "/" + i.string();
 #ifdef _WIN32
-            auto attributes = GetFileAttributes(path.c_str());
-            if (updatedOnly && (attributes & FILE_ATTRIBUTE_ARCHIVE))
-            {
-                com_.uploadFile(path, i.string());
-                SetFileAttributes(path.c_str(), attributes & ~FILE_ATTRIBUTE_ARCHIVE);
-            }
-            else if (!updatedOnly)
-                com_.uploadFile(path, i.string());
+                auto attributes = GetFileAttributes(path.c_str());
+                if (updatedOnly && (attributes & FILE_ATTRIBUTE_ARCHIVE))
+                {
+                    com_.uploadFile(path, i.string());
+                    SetFileAttributes(path.c_str(), attributes & ~FILE_ATTRIBUTE_ARCHIVE);
+                }
+                else if (!updatedOnly)
+                    com_.uploadFile(path, i.string());
 #else
-            com_.uploadFile(path, i.string());
+                com_.uploadFile(path, i.string());
 #endif // _WIN32
-        }
-        catch (std::exception const& exc)
-        {
-            if (ignoreUploadError_)
-            {
-                std::cerr << exc.what() << "\n";
-                std::cerr << "ignoring error, continue\n";
             }
-            else
-                throw exc;
+            catch (std::exception const& exc)
+            {
+                if (ignoreUploadError_)
+                {
+                    std::cerr << exc.what() << "\n";
+                    std::cerr << "ignoring error, continue\n";
+                }
+                else
+                    throw exc;
+            }
         }
     }
 }

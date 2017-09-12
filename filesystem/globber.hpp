@@ -14,6 +14,7 @@ public:
     Globber(std::string root, bool directories = false);
 
     void setBlackList(std::vector <std::string> const& blackList);
+    void setDirectoryBlackList(std::vector <std::string> const& blackList);
 
     std::vector <boost::filesystem::path> glob(std::string const& mask);
     std::vector <boost::filesystem::path> globRecursive(std::string const& mask);
@@ -56,5 +57,6 @@ private:
 private:
     boost::filesystem::path root_;
     std::vector <std::string> blackList_;
+    std::vector <std::string> dirBlackList_;
     bool directories_;
 };

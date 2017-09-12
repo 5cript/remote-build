@@ -18,7 +18,7 @@ struct Config : public JSON::Stringifiable <Config>
     std::string log;
     boost::optional <std::vector <std::string>> directoryFilter;
     boost::optional <std::vector <std::string>> fileFilter;
-    boost::optional <std::string> globExpression;
+    boost::optional <std::vector <std::string>> globExpressions;
     std::string user;
     std::string password;
 };
@@ -29,5 +29,5 @@ void saveConfig(std::ostream& stream, Config const& cfg);
 BOOST_FUSION_ADAPT_STRUCT
 (
     Config,
-    serverAddress, local, id, directoryFilter, fileFilter, globExpression, log, user, password
+    serverAddress, local, id, directoryFilter, fileFilter, globExpressions, log, user, password
 )
