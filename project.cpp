@@ -29,10 +29,10 @@ Project::~Project()
     com_.cleanup();
 }
 //---------------------------------------------------------------------------------------------------------------------
-void Project::createDirectoryStructure(std::vector <std::string> const& blackFilterList, bool updatedOnly)
+void Project::createDirectoryStructure(std::vector <std::string> const& dirFilter, bool updatedOnly)
 {
     Globber glob(rootDir_, true);
-    glob.setBlackList(blackFilterList);
+    glob.setDirectoryBlackList(dirFilter);
     auto directories = glob.globRecursive("*");
     for (auto const& i : directories)
     {
@@ -66,7 +66,7 @@ void Project::upload(std::vector <std::string> const& fileFilter,
         auto files = glob.globRecursive(globberExpression);
         for (auto const& i : files)
         {
-            try
+            auto upload = [&]()
             {
                 auto path = rootDir_ + "/" + i.string();
 #ifdef _WIN32
@@ -81,16 +81,23 @@ void Project::upload(std::vector <std::string> const& fileFilter,
 #else
                 com_.uploadFile(path, i.string());
 #endif // _WIN32
-            }
-            catch (std::exception const& exc)
+            };
+
+            if (ignoreUploadError_)
             {
-                if (ignoreUploadError_)
+                try
+                {
+                    upload();
+                }
+                catch (std::exception const& exc)
                 {
                     std::cerr << exc.what() << "\n";
                     std::cerr << "ignoring error, continue\n";
                 }
-                else
-                    throw exc;
+            }
+            else
+            {
+                upload();
             }
         }
     }

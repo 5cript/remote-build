@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 set (CMAKE_CXX_STANDARD 14)
-set (CMAKE_CXX_FLAGS "--std=c++14 ${CMAKE_CXX_FLAGS} -O3")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g -O0")
+set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 ## Use the variable PROJECT_NAME for changing the target name
 set(remote_build "remote-build")
@@ -27,6 +29,12 @@ find_package(Boost REQUIRED COMPONENTS
 	filesystem
 	program_options
 )
+
+if (WIN32)
+	find_library(LDEBUG dbghelp)
+	
+	target_link_libraries(${remote_build} ${LDEBUG})
+endif()
 
 find_library(LCURL curl)
 find_library(LSIMPLEJSON NAMES SimpleJSON PATHS "../SimpleJSON/build" "SimpleJSON/build" STATIC)

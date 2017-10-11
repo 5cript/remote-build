@@ -1,4 +1,5 @@
 #include "communicator.hpp"
+#include <boost/algorithm/string.hpp>
 
 #include <curl/curl.h>
 
@@ -122,6 +123,9 @@ void Communicator::uploadFile(std::string const& local, std::string const& remot
 
         UploadContext uctx{std::ifstream{local, std::ios_base::binary}};
 
+        std::string remoteFixed = remote;
+        boost::replace_all(remoteFixed, " ", "%20");
+
         struct curl_slist *list = nullptr;
         list = curl_slist_append(list, "Expect:");
 
@@ -131,7 +135,7 @@ void Communicator::uploadFile(std::string const& local, std::string const& remot
         curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
         curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
         curl_easy_setopt(curl, CURLOPT_PUT, 1L);
-        curl_easy_setopt(curl, CURLOPT_URL, (remoteServer_ + "/" + remote).c_str());
+        curl_easy_setopt(curl, CURLOPT_URL, (remoteServer_ + "/" + remoteFixed).c_str());
         curl_easy_setopt(curl, CURLOPT_READDATA, &uctx);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);

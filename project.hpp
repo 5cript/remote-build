@@ -20,7 +20,7 @@ public:
     Project(Project const&) = delete;
     Project& operator=(Project const&) = delete;
 
-    void createDirectoryStructure(std::vector <std::string> const& blackFilterList, bool updatedOnly);
+    void createDirectoryStructure(std::vector <std::string> const& dirFilter, bool updatedOnly);
     void upload(std::vector <std::string> const& fileFilter,
                 std::vector <std::string> const& dirFilter,
                 bool updatedOnly,

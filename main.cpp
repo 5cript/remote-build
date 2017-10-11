@@ -2,6 +2,18 @@
 #include "project.hpp"
 //#include "app.hpp"
 
+#include <boost/version.hpp>
+
+#ifndef BOOST_VERSION
+#   error "BOOST_VERSION macro undefined, even though boost/version.hpp is included (broken boost installation?)"
+#endif // BOOST_VERSION
+#if BOOST_VERSION >= 106500
+#   include <boost/stacktrace.hpp>
+#elif defined(__WIN32)
+#   define WINTRACE
+#   include "dbg.h"
+#endif
+
 #include <boost/program_options.hpp>
 
 #include <stdexcept>
@@ -9,6 +21,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <iomanip>
 
 namespace po = boost::program_options;
 
@@ -137,6 +150,16 @@ int main(int argc, char** argv)
     catch(std::exception const& exc)
     {
         std::cout << "something failed...\n" << exc.what() << "\n";
+
+#if BOOST_VERSION >= 106500
+        std::cout << boost::stacktrace::stacktrace();
+#elif defined(WINTRACE)
+        auto trace = dbg::stack_trace();
+        for (auto const& i : trace)
+        {
+            std::cout << "0x" << std::hex << i.address << " " << i.name << " in " << i.file << "(" << i.line << ") in module " << i.module << "\n";
+        }
+#endif
         return 1;
     }
 }
