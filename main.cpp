@@ -49,6 +49,7 @@ int main(int argc, char** argv)
         ("updated-only,o", "clean stuff on host")
         ("ignore-upload-fail,i", "continue, even if a file could not be opened for upload")
         ("timeout,t", po::value<int>(&buildTimeout)->default_value(60), "build wait timeout (seconds)")
+        ("local-scripts,l", "perform local post/pre steps. This is an unsecure option for the local PC.")
     ;
 
     po::variables_map vm;
@@ -90,6 +91,12 @@ int main(int argc, char** argv)
     // START REQUESTS
     //######################################################################################################
 
+    if (vm.count("local-scripts") && config.localPreUploadSteps)
+    {
+        std::cout << "running: " << config.localPreUploadSteps.get() << "\n";
+        system(config.localPreUploadSteps.get().c_str());
+    }
+
     if (vm.count("clean"))
         project.clean();
     if (vm.count("make-directories"))
@@ -123,6 +130,11 @@ int main(int argc, char** argv)
             globExpr
         );
     }
+    if (vm.count("local-scripts") && config.localPostUploadSteps)
+    {
+        std::cout << "running: " << config.localPostUploadSteps.get() << "\n";
+        system(config.localPostUploadSteps.get().c_str());
+    }
     if (vm.count("build"))
     {
         project.build();
@@ -142,9 +154,9 @@ int main(int argc, char** argv)
         std::cout << "waiting for build to finish timed out, here is the build log so far\n";
         std::ofstream writer{config.log, std::ios_base::binary};
         project.saveBuildLog(std::cout, writer);
+
         return 0;
     }
-
 
     }
     catch(std::exception const& exc)
