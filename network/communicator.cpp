@@ -1,4 +1,10 @@
 #include "communicator.hpp"
+
+#ifndef Q_MOC_RUN // A Qt workaround, for those of you who use Qt
+#   include <SimpleJSON/parse/jsd.hpp>
+#   include <SimpleJSON/stringify/jss.hpp>
+#endif
+
 #include <boost/algorithm/string.hpp>
 
 #include <curl/curl.h>
@@ -104,6 +110,34 @@ bool Communicator::authenticate(std::string const& user, std::string const& pass
     return false;
 }
 //---------------------------------------------------------------------------------------------------------------------
+RemoteBuild::DirectoryListing Communicator::getListing(std::string const& mask)
+{
+    CURL *curl = curl_easy_init();
+
+    std::string listing;
+    if (curl)
+    {
+        // sanitize mask
+        std::string sanitizedMask = url_encode(mask);
+
+        curl_easy_setopt(curl, CURLOPT_URL, (remoteServer_ + "_listing?filter=" + sanitizedMask).c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFunction);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &listing);
+        curl_easy_setopt(curl, CURLOPT_COOKIE, ("SESS="s + authToken_).c_str());
+
+        auto res = curl_easy_perform(curl);
+
+        curl_easy_cleanup(curl);
+        /* Check for errors */
+        if(res != CURLE_OK)
+            throw std::runtime_error{"curl error "s + curl_easy_strerror(res)};
+    }
+    if (listing.empty() || listing == "Not Found" || listing == "Bad Request")
+        throw std::runtime_error("Failed to retrieve directory listing.");
+
+    return JSON::make_from_json <RemoteBuild::DirectoryListing> (listing);
+}
+//---------------------------------------------------------------------------------------------------------------------
 void Communicator::uploadFile(std::string const& local, std::string const& remote)
 {
     CURL *curl = curl_easy_init();
@@ -124,7 +158,8 @@ void Communicator::uploadFile(std::string const& local, std::string const& remot
         UploadContext uctx{std::ifstream{local, std::ios_base::binary}};
 
         std::string remoteFixed = remote;
-        boost::replace_all(remoteFixed, " ", "%20");
+        boost::replace_all(remoteFixed, "\\", "/");
+        remoteFixed = url_encode(remoteFixed);
 
         struct curl_slist *list = nullptr;
         list = curl_slist_append(list, "Expect:");
@@ -178,6 +213,20 @@ void Communicator::makeDirectory(std::string const& remote)
     }
 }
 //---------------------------------------------------------------------------------------------------------------------
+std::string Communicator::url_encode(std::string const& str)
+{
+    CURL *curl = curl_easy_init();
+    std::string encoded;
+    auto* escaped = curl_easy_escape(curl, str.c_str(), str.length());
+    if (escaped != nullptr)
+    {
+        encoded = escaped;
+        curl_free(escaped);
+    }
+    curl_easy_cleanup(curl);
+    return encoded;
+}
+//---------------------------------------------------------------------------------------------------------------------
 std::string Communicator::makeRequest(std::string const& command)
 {
     CURL *curl = curl_easy_init();
@@ -201,6 +250,28 @@ std::string Communicator::makeRequest(std::string const& command)
         return response_string;
     }
     return "";
+}
+//---------------------------------------------------------------------------------------------------------------------
+void Communicator::remove(std::string const& remote)
+{
+    CURL *curl = curl_easy_init();
+
+    if (curl)
+    {
+        std::string remoteFixed = remote;
+        boost::replace_all(remoteFixed, "\\", "/");
+        remoteFixed = url_encode(remoteFixed);
+
+        curl_easy_setopt(curl, CURLOPT_URL, (remoteServer_ + "/" + remoteFixed).c_str());
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "DELETE");
+        curl_easy_setopt(curl, CURLOPT_COOKIE, ("SESS="s + authToken_).c_str());
+        auto res = curl_easy_perform(curl);
+
+        curl_easy_cleanup(curl);
+
+        if(res != CURLE_OK)
+            throw std::runtime_error{"curl error "s + curl_easy_strerror(res)};
+    }
 }
 //---------------------------------------------------------------------------------------------------------------------
 void Communicator::initialize()

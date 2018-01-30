@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../listing.hpp"
+
 #include <string>
 #include <fstream>
 
@@ -26,7 +28,12 @@ public:
     void cleanup();
     void uploadFile(std::string const& local, std::string const& remote);
     void makeDirectory(std::string const& remote);
+    void remove(std::string const& remote);
+    RemoteBuild::DirectoryListing getListing(std::string const& mask);
     std::string makeRequest(std::string const& command);
+
+private:
+    std::string url_encode(std::string const& str);
 
 private:
     std::string remoteAddr_;

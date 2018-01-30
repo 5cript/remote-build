@@ -43,13 +43,15 @@ int main(int argc, char** argv)
         ("help", "produce help message")
         ("config,f", po::value<std::string>(&configPath)->default_value("./config.json"), "config to use")
         ("make-directories,m", "create directory on remote host")
-        ("upload,u", "upload files to host")
+        ("synchronize,u", "upload files to host")
         ("build,b", "build stuff on host")
         ("clean,c", "clean stuff on host")
-        ("updated-only,o", "clean stuff on host")
+        ("updated-only,o", "only upload files that haven't changed (recommended)")
         ("ignore-upload-fail,i", "continue, even if a file could not be opened for upload")
         ("timeout,t", po::value<int>(&buildTimeout)->default_value(60), "build wait timeout (seconds)")
         ("local-scripts,l", "perform local post/pre steps. This is an unsecure option for the local PC.")
+        ("print-diff-only,p", "Only print differences, do not actually upload. needs -u param though.")
+        ("kill-server-only,k", "Deletes files that are in the server, but not the client")
     ;
 
     po::variables_map vm;
@@ -110,7 +112,7 @@ int main(int argc, char** argv)
             vm.count("clean") == 0 && vm.count("updated-only")
         );
     }
-    if (true || vm.count("upload"))
+    if (vm.count("synchronize"))
     {
         std::vector <std::string> fileFilter;
         std::vector <std::string> dirFilter;
@@ -119,15 +121,17 @@ int main(int argc, char** argv)
         if (config.directoryFilter)
             dirFilter = config.directoryFilter.get();
 
-        std::vector <std::string> globExpr {"*.?pp"};
+        std::vector <std::string> filter {"*.?pp"};
         if (config.globExpressions)
-            globExpr = config.globExpressions.get();
+            filter = config.globExpressions.get();
 
-        project.upload(
+        project.unidirectional_sychronize(
             fileFilter,
             dirFilter,
             vm.count("clean") == 0 && vm.count("updated-only"),
-            globExpr
+            filter,
+            vm.count("print-diff-only"),
+            vm.count("kill-server-only")
         );
     }
     if (vm.count("local-scripts") && config.localPostUploadSteps)
@@ -161,7 +165,7 @@ int main(int argc, char** argv)
     }
     catch(std::exception const& exc)
     {
-        std::cout << "something failed...\n" << exc.what() << "\n";
+        std::cout << "something failed: " << exc.what() << "\n";
 
 #if BOOST_VERSION >= 106500
         std::cout << boost::stacktrace::stacktrace();

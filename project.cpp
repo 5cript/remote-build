@@ -1,6 +1,10 @@
 #include "project.hpp"
 
+#include "listing.hpp"
+
 #include <iostream>
+#include <algorithm>
+#include <iterator>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -52,10 +56,14 @@ void Project::createDirectoryStructure(std::vector <std::string> const& dirFilte
     }
 }
 //---------------------------------------------------------------------------------------------------------------------
-void Project::upload(std::vector <std::string> const& fileFilter,
-                     std::vector <std::string> const& dirFilter,
-                     bool updatedOnly,
-                     std::vector <std::string> const& mask)
+void Project::unidirectional_sychronize(
+    std::vector <std::string> const& fileFilter,
+    std::vector <std::string> const& dirFilter,
+    bool updatedOnly,
+    std::vector <std::string> const& mask,
+    bool diffOnly,
+    bool killServerFiles
+)
 {
     Globber glob(rootDir_);
     glob.setBlackList(fileFilter);
@@ -63,24 +71,56 @@ void Project::upload(std::vector <std::string> const& fileFilter,
 
     for (auto const& globberExpression : mask)
     {
+        auto serverListing = com_.getListing(globberExpression);
         auto files = glob.globRecursive(globberExpression);
-        for (auto const& i : files)
+        auto clientListing = RemoteBuild::addHashes(rootDir_, files);
+
+        std::vector <std::string> diff;
+        if (updatedOnly)
+        {
+            auto actions = RemoteBuild::getDifference(serverListing, clientListing);
+            diff = actions.uploadList;
+
+            if (!actions.deleteList.empty())
+            {
+                if (killServerFiles)
+                {
+                    std::cout << "The following files are present on server and will be deleted.\n";
+                    for (auto const& i : actions.deleteList)
+                        com_.remove(i);
+                }
+                else
+                    std::cout << "WARNING: The following files are present on server, but not client.\n";
+
+                for (auto const& i : actions.deleteList)
+                    std::cout << "\t" << i << "\n";
+            }
+        }
+        else
+        {
+            std::transform(std::begin(files), std::end(files), std::back_inserter(diff), [](auto const& p)
+            {
+                return p.string();
+            });
+        }
+
+        if (diffOnly)
+        {
+            std::cout << "Files for Mask " << globberExpression << ":\n";
+            for (auto const& i : diff)
+                std::cout << "\t" << i << "\n";
+            continue;
+        }
+
+        for (auto const& i : diff)
         {
             auto upload = [&]()
             {
-                auto path = rootDir_ + "/" + i.string();
-#ifdef _WIN32
-                auto attributes = GetFileAttributes(path.c_str());
-                if (updatedOnly && (attributes & FILE_ATTRIBUTE_ARCHIVE))
+                if (!diffOnly)
                 {
-                    com_.uploadFile(path, i.string());
-                    SetFileAttributes(path.c_str(), attributes & ~FILE_ATTRIBUTE_ARCHIVE);
+                    auto local = rootDir_ + "/" + i;
+                    com_.uploadFile(local, i);
                 }
-                else if (!updatedOnly)
-                    com_.uploadFile(path, i.string());
-#else
-                com_.uploadFile(path, i.string());
-#endif // _WIN32
             };
 
             if (ignoreUploadError_)

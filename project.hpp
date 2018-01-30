@@ -21,10 +21,14 @@ public:
     Project& operator=(Project const&) = delete;
 
     void createDirectoryStructure(std::vector <std::string> const& dirFilter, bool updatedOnly);
-    void upload(std::vector <std::string> const& fileFilter,
-                std::vector <std::string> const& dirFilter,
-                bool updatedOnly,
-                std::vector <std::string> const& mask = {"*.?pp"});
+    void unidirectional_sychronize(
+        std::vector <std::string> const& fileFilter,
+        std::vector <std::string> const& dirFilter,
+        bool updatedOnly,
+        std::vector <std::string> const& mask,
+        bool diffOnly,
+        bool killServerFiles
+    );
     void build();
     void clean();
     int getExitStatus();
