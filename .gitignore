@@ -16,3 +16,5 @@ build/*
 x64/*
 .vs/*
 packages/*
+config.json
+config_nix.json

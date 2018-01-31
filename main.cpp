@@ -87,6 +87,8 @@ int main(int argc, char** argv)
     }
     auto config = loadConfig(reader);
 
+    std::cout << "Server Address: " << config.serverAddress << "\n";
+
     Project project(config.local, config.id, config.serverAddress, config.user, config.password, ignoreUploadError);
 
     //######################################################################################################
