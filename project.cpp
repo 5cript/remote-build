@@ -23,15 +23,11 @@ Project::Project(std::string rootDir,
     , ignoreUploadError_{ignoreUploadError}
     , com_{remoteServer, id_}
 {
-    com_.initialize();
     if (!com_.authenticate(user, password))
         throw std::runtime_error("authentication failed");
 }
 //---------------------------------------------------------------------------------------------------------------------
-Project::~Project()
-{
-    com_.cleanup();
-}
+Project::~Project() = default;
 //---------------------------------------------------------------------------------------------------------------------
 void Project::createDirectoryStructure(std::vector <std::string> const& dirFilter, bool updatedOnly)
 {
@@ -39,21 +35,7 @@ void Project::createDirectoryStructure(std::vector <std::string> const& dirFilte
     glob.setDirectoryBlackList(dirFilter);
     auto directories = glob.globRecursive("*");
     for (auto const& i : directories)
-    {
-        auto path = i.string();
-#ifdef _WIN32
-        auto attributes = GetFileAttributes(path.c_str());
-        if (updatedOnly && (attributes & FILE_ATTRIBUTE_ARCHIVE))
-        {
-            com_.makeDirectory(path);
-            SetFileAttributes(path.c_str(), attributes & ~FILE_ATTRIBUTE_ARCHIVE);
-        }
-        else if (!updatedOnly)
-            com_.makeDirectory(path);
-#else
-        com_.makeDirectory(path);
-#endif // _WIN32
-    }
+        com_.makeDirectory(i.string());
 }
 //---------------------------------------------------------------------------------------------------------------------
 void Project::unidirectional_sychronize(
@@ -119,6 +101,7 @@ void Project::unidirectional_sychronize(
                 if (!diffOnly)
                 {
                     auto local = rootDir_ + "/" + i;
+                    std::cout << "uploading: " << i << "\n";
                     com_.uploadFile(local, i);
                 }
             };

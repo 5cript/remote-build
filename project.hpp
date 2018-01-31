@@ -60,5 +60,5 @@ private:
     std::string id_;
     bool ignoreUploadError_;
 
-    Communicator com_;
+    CommunicatorEx com_;
 };

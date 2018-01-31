@@ -10,15 +10,15 @@
 
 namespace RemoteBuild
 {
-    struct FileWithHash : public JSON::Stringifiable <FileWithHash>
-                        , public JSON::Parsable <FileWithHash>
+    struct EntryWithHash : public JSON::Stringifiable <EntryWithHash>
+                        , public JSON::Parsable <EntryWithHash>
     {
-        std::string file;
-        std::string sha256;
+        std::string entry;
+        std::string hash;
 
-        FileWithHash(std::string file = {}, std::string sha256 = {})
-            : file{std::move(file)}
-            , sha256{std::move(sha256)}
+        EntryWithHash(std::string entry = {}, std::string hash = {})
+            : entry{std::move(entry)}
+            , hash{std::move(hash)}
         {
         }
     };
@@ -28,7 +28,7 @@ namespace RemoteBuild
     {
         std::string filter;
         std::string root;
-        std::vector <FileWithHash> filesWithHash;
+        std::vector <EntryWithHash> entriesWithHash;
     };
 
     struct DifferenceActions
@@ -41,7 +41,7 @@ namespace RemoteBuild
      *  @param root Path to recurse through
      *  @param extensionWhiteSelect Will only select files with the given extension. does not filter if empty.
      */
-    DirectoryListing makeListing(std::string const& root, std::string const& extensionWhiteSelect = {});
+    DirectoryListing makeListing(std::string const& root, bool directories = false, std::string const& extensionWhiteSelect = {});
     DirectoryListing addHashes(std::string const& root, std::vector <boost::filesystem::path> fileList);
 
     DifferenceActions getDifference(DirectoryListing const& serverListing, DirectoryListing const& clientListing);
@@ -49,12 +49,12 @@ namespace RemoteBuild
 
 BOOST_FUSION_ADAPT_STRUCT
 (
-    RemoteBuild::FileWithHash,
-    file, sha256
+    RemoteBuild::EntryWithHash,
+    entry, hash
 )
 
 BOOST_FUSION_ADAPT_STRUCT
 (
     RemoteBuild::DirectoryListing,
-    root, filter, filesWithHash
+    root, filter, entriesWithHash
 )

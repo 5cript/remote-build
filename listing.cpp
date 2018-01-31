@@ -29,30 +29,75 @@ namespace RemoteBuild
 
         return hashString;
     }
-//#####################################################################################################################
-    DirectoryListing makeListing(std::string const& root, std::string const& extensionWhiteSelect)
+//---------------------------------------------------------------------------------------------------------------------
+    bool checkMask(std::string const& p, std::string const& mask)
     {
-        using namespace boost::filesystem;
+        std::function <bool(const char*, const char*)> match;
 
+        match = [&match](char const *needle, char const *haystack) -> bool
+        {
+            for (; *needle != '\0'; ++needle)
+            {
+                switch (*needle)
+                {
+                    case '?':
+                        if (*haystack == '\0')
+                            return false;
+                        ++haystack;
+                        break;
+                    case '*':
+                    {
+                        if (needle[1] == '\0')
+                            return true;
+                        size_t max = strlen(haystack);
+                        for (size_t i = 0; i < max; i++)
+                            if (match(needle + 1, haystack + i))
+                                return true;
+                        return false;
+                    }
+                    default:
+                        if (*haystack != *needle)
+                            return false;
+                        ++haystack;
+                }
+            }
+            return *haystack == '\0';
+        };
+
+        return match(mask.c_str(), p.c_str());
+    }
+//#####################################################################################################################
+    DirectoryListing makeListing(std::string const& root, bool directories, std::string const& globber)
+    {
         DirectoryListing result;
         result.root = root;
-        result.filter = extensionWhiteSelect;
+        result.filter = globber;
 
+        using namespace boost::filesystem;
         recursive_directory_iterator iter(root), end;
         for (; iter != end; ++iter)
         {
-            if (!is_regular_file(iter->status()))
+            if (!directories && !is_regular_file(iter->status()))
+                continue;
+            else if (directories && !is_directory(iter->status()))
                 continue;
 
-            if (!extensionWhiteSelect.empty() && iter->path().extension().string() != extensionWhiteSelect)
+            auto entry = relative(iter->path(), root).string();
+            std::replace(entry.begin(), entry.end(), '\\', '/');
+
+            if (!globber.empty() && !checkMask(entry, globber))
                 continue;
 
-            auto file = relative(iter->path(), root).string();
-            std::replace(file.begin(), file.end(), '\\', '/');
-            result.filesWithHash.emplace_back(
-                file,
-                makeHash(iter->path().string())
-            );
+            if (!directories)
+                result.entriesWithHash.emplace_back(
+                    entry,
+                    makeHash(iter->path().string())
+                );
+            else
+                result.entriesWithHash.emplace_back(
+                    entry,
+                    ""
+                );
         }
 
         return result;
@@ -64,11 +109,11 @@ namespace RemoteBuild
 
         DirectoryListing result;
         result.root = root;
-        for (auto const& file : fileList)
+        for (auto const& entry : fileList)
         {
-            result.filesWithHash.emplace_back(
-                file.string(),
-                makeHash((path{root} / file).string())
+            result.entriesWithHash.emplace_back(
+                entry.string(),
+                makeHash((path{root} / entry).string())
             );
         }
         return result;
@@ -82,23 +127,23 @@ namespace RemoteBuild
         {
             std::vector <std::string> difference;
 
-            for (auto const& searcher : source.filesWithHash)
+            for (auto const& searcher : source.entriesWithHash)
             {
                 bool found = false;
-                for (auto const& matcher : destination.filesWithHash)
+                for (auto const& matcher : destination.entriesWithHash)
                 {
-                    auto mfile = matcher.file;
-                    auto sfile = searcher.file;
-                    if (matcher.file == searcher.file)
+                    auto mfile = matcher.entry;
+                    auto sfile = searcher.entry;
+                    if (matcher.entry == searcher.entry)
                     {
-                        if (checkHash && matcher.sha256 != searcher.sha256)
-                            difference.push_back(searcher.file);
+                        if (checkHash && matcher.hash != searcher.hash)
+                            difference.push_back(searcher.entry);
                         found = true;
                         break;
                     }
                 }
                 if (!found)
-                    difference.push_back(searcher.file);
+                    difference.push_back(searcher.entry);
             }
 
             return difference;

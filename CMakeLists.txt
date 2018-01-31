@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 
 set (CMAKE_CXX_STANDARD 14)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g -O0")
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g -O0")
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
 ## Use the variable PROJECT_NAME for changing the target name
@@ -37,9 +37,12 @@ if (WIN32)
 endif()
 
 find_library(LCURL curl)
+find_library(LCRYPTOPP cryptopp)
 find_library(LSIMPLEJSON NAMES SimpleJSON PATHS "../SimpleJSON/build" "SimpleJSON/build" STATIC)
+find_library(LATTENDEE NAMES attendee PATHS "../attendee/build" "attendee/build" STATIC)
 
 message("-- External libraries")
 message("	${LSIMPLEJSON}")
+message("	${LATTENDEE}")
 
-target_link_libraries(${remote_build} ${LSIMPLEJSON} ${Boost_LIBRARIES} ${LCURL})
+target_link_libraries(${remote_build} ${LATTENDEE} ${LSIMPLEJSON} ${Boost_LIBRARIES} ${LCRYPTOPP} ${LCURL})
