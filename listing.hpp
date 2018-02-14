@@ -44,6 +44,17 @@ namespace RemoteBuild
     DirectoryListing makeListing(std::string const& root, bool directories = false, std::string const& extensionWhiteSelect = {});
     DirectoryListing addHashes(std::string const& root, std::vector <boost::filesystem::path> fileList);
 
+    /**
+     *  Performs a wildcard match.
+     */
+    bool checkMask(std::string const& p, std::string const& mask);
+
+    DirectoryListing filterListing(
+        DirectoryListing listing,
+        std::vector <std::string> const& fileFilter,
+        std::vector <std::string> const& dirFilter
+    );
+
     DifferenceActions getDifference(DirectoryListing const& serverListing, DirectoryListing const& clientListing);
 }
 

@@ -9,6 +9,38 @@
 namespace RemoteBuild
 {
 //#####################################################################################################################
+    DirectoryListing filterListing(
+        DirectoryListing listing,
+        std::vector <std::string> const& fileFilter,
+        std::vector <std::string> const& dirFilter
+    )
+    {
+        auto isFiltered = [&](boost::filesystem::path const& p)
+        {
+            for (auto const& i : fileFilter)
+                if (checkMask(p.string(), i))
+                    return true;
+            for (auto const& i : dirFilter)
+            {
+                auto root = p;
+                while (!root.parent_path().empty())
+                    root = root.parent_path();
+                if (root.string() == i)
+                    return true;
+            }
+            return false;
+        };
+
+        std::vector <EntryWithHash> entries;
+        for (auto const& i : listing.entriesWithHash)
+        {
+            if (!isFiltered(i.entry))
+                entries.push_back(i);
+        }
+        listing.entriesWithHash = entries;
+        return listing;
+    };
+//---------------------------------------------------------------------------------------------------------------------
     std::string makeHash(std::string const& fileName)
     {
         using namespace CryptoPP;

@@ -57,8 +57,8 @@ void CommunicatorEx::uploadFile(std::string const& local, std::string const& rem
     request req;
     auto res = req
         .cookie_string("SESS="s + authToken_)
-        .put(remoteServer_ + "/" + request::url_encode(remoteFixed))
         .make_source <attendee::file_source> (local)
+        .put(remoteServer_ + "/" + request::url_encode(remoteFixed))
         .perform()
     ;
 
@@ -70,8 +70,8 @@ void CommunicatorEx::makeDirectory(std::string const& remote)
     request req;
     auto res = req
         .cookie_string("SESS="s + authToken_)
-        .post(remoteServer_ + "_mkdir")
         .make_source <attendee::string_source> (remote)
+        .post(remoteServer_ + "_mkdir")
         .perform();
 
     testForErrors(res);

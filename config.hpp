@@ -9,28 +9,34 @@
 #include <string>
 #include <boost/optional.hpp>
 
-struct Config : public JSON::Stringifiable <Config>
-              , public JSON::Parsable <Config>
+namespace RemoteBuild
 {
-    std::string serverAddress;
-    std::string local;
-    std::string id;
-    std::string log;
-    boost::optional <std::vector <std::string>> directoryFilter;
-    boost::optional <std::vector <std::string>> fileFilter;
-    boost::optional <std::vector <std::string>> globExpressions;
-    std::string user;
-    std::string password;
-    boost::optional <std::string> localPostUploadSteps;
-    boost::optional <std::string> localPreUploadSteps;
-};
+    struct Config : public JSON::Stringifiable <Config>
+                  , public JSON::Parsable <Config>
+    {
+        std::string serverAddress;
+        std::string local;
+        std::string id;
+        std::string log;
+        boost::optional <std::vector <std::string>> directoryFilter;
+        boost::optional <std::vector <std::string>> fileFilter;
+        boost::optional <std::vector <std::string>> globExpressions;
+        std::string user;
+        std::string password;
+        boost::optional <std::string> localPostUploadSteps;
+        boost::optional <std::string> localPreUploadSteps;
+    };
 
-Config loadConfig(std::istream& json);
-void saveConfig(std::ostream& stream, Config const& cfg);
+    namespace Internal
+    {
+        Config loadConfig(std::istream& json);
+        void saveConfig(std::ostream& stream, Config const& cfg);
+    }
+}
 
 BOOST_FUSION_ADAPT_STRUCT
 (
-    Config,
+    RemoteBuild::Config,
     serverAddress, local, id, directoryFilter, fileFilter, globExpressions, log, user, password, localPostUploadSteps,
     localPreUploadSteps
 )

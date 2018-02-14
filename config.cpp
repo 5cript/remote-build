@@ -4,19 +4,23 @@
 #include <SimpleJSON/stringify/jss.hpp>
 #include <SimpleJSON/stringify/jss_convenience.hpp>
 
-//#####################################################################################################################
-Config loadConfig(std::istream& json)
+namespace RemoteBuild { namespace Internal
 {
-    Config cc;
-    auto tree = JSON::parse_json(json);
-    JSON::parse(cc, "config", tree);
-    return cc;
-}
+//#####################################################################################################################
+    Config loadConfig(std::istream& json)
+    {
+        Config cc;
+        auto tree = JSON::parse_json(json);
+        JSON::parse(cc, "config", tree);
+        return cc;
+    }
 //---------------------------------------------------------------------------------------------------------------------
-void saveConfig(std::ostream& stream, Config const& cfg)
-{
-    stream << "{";
-    JSON::try_stringify(stream, "config", cfg, JSON::ProduceNamedOutput);
-    stream << "}";
-}
+    void saveConfig(std::ostream& stream, Config const& cfg)
+    {
+        stream << "{";
+        JSON::try_stringify(stream, "config", cfg, JSON::ProduceNamedOutput);
+        stream << "}";
+    }
 //#####################################################################################################################
+}
+}
